@@ -1,12 +1,12 @@
-." $Id$
+." $Id: Frame.man,v 1.1 1998/10/12 01:33:20 falk Exp falk $
 ." view with "tbl | nroff -man"
 ."
-.TH "Frame" 3 "October 1998" "Version 1.0" ""
+.TH "Frame" 3 "December 1998" "Version 1.0" ""
 .SH NAME
 Frame
 .SH DESCRIPTION
 The Frame widget manages one child widget, placing a decorative border
-around it.  An optional label may also be specified, which appears along
+around it.  An optional title may also be specified, which appears along
 the top of the frame.
 
 .SH CLASS
@@ -26,20 +26,18 @@ l|l|l|l.
 Frame
 Name	Class	Type	Default
 =
-shadowStyle	ShadowStyle	ShadowStyle	solid
+shadowType	ShadowType	ShadowType	solid
 shadowWidth	ShadowWidth	Dimension	2
 foreground	Foreground	Pixel	XtDefaultForeground
-label	Label	String	NULL
-font	Font	XFontStruct *	XtDefaultFont
+title	Title	Widget	NULL
 justify	Justify	XtJustify	left
-internalWidth	Margin	Dimension	0
-internalHeight	Margin	Dimension	0
+marginWidth	Margin	Dimension	0
+marginHeight	Margin	Dimension	0
 allowResize	AllowResize	Boolean	True
 
 beNiceToColormap	BeNiceToColormap	Boolean	False
 topShadowContrast	TopShadowContrast	int	20
 bottomShadowContrast	BottomShadowContrast	int	40
-insensitiveContrast	InsensitiveContrast	int	33
 .TE
 .ps +2
 
@@ -49,7 +47,7 @@ See the \fBCore\fP and \fBComposite\fP widgets for more resources.
 .SS Descriptions.
 
 .TP
-.I ShadowStyle
+.I ShadowType
 
 .ps -2
 .TS
@@ -57,8 +55,8 @@ box;
 cBs
 cB|cB
 l|c.
-Shadow Styles
-Style	Best width
+Shadow Types
+Type	Best width
 =
 Blank
 Raised	1 or 2
@@ -70,33 +68,55 @@ Trough	6
 .TE
 .ps +2
 
+.IP
+For Motif compatibility, alternate names for ShadowType may specified.
+
+.ps -2
+.TS
+box;
+cBs
+cB|cB
+l|l.
+Shadow Types
+Alternate	Type
+=
+none	blank
+shadow_out	raised
+shadow_in	lowered
+shadow_etched_out	ridge
+shadow_etched_in	groove
+.TE
+.ps +2
+
 .TP
 .I ShadowWidth
 Width of decorative border.  For
 .B Raised
 and
 .B Groove
-styles, this should be an even number.  For 
+types, this should be an even number.  For 
 .B Trough
 and
 .B Plateau
-styles, this should be six or more.
+types, this should be six or more.
 
 .TP
 .I Foreground
-Specifies the color used for the label and border (if solid.)
+Specifies the color used for the border (if solid.)
 
 .TP
-.I Font
-Font used to draw label.
+.I Title
+Specifies the widget to be used as the frame title.  This must be
+one of the Frame's child widgets.  Typically, some sort of label
+widget is used here.
 
 .TP
 .I Justify
-Controls justification of the label.  One of
+Controls justification of the title.  One of
 .B left, right, centered.
 
 .TP
-.I InternalWidth, InternalHeight
+.I marginWidth, marginHeight
 Specifies the margins around the frame's child.
 
 .TP
@@ -117,65 +137,61 @@ The contrast used for computing the shade of the top shadow color.  0-100.
 .I BottomShadowContrast
 The contrast used for computing the shade of the bottom shadow color.  0-100.
 
-.TP
-.I InsensitiveContrast.
-Determines how "grey" the label appears when insensitive.  0-100.
-
 .SH EXAMPLES
 .LP
 Adding decorative borders around other widgets which may not have
 such options.
 .IP
 .nf
-*frame.shadowStyle: ridge
+*frame.shadowType: ridge
 *frame.shadowWidth: 2
 *frame.Margin: 2
 .fi
 
 .LP
-By setting the shadow style to blank, the Frame widget may be used to
+By setting the shadow type to blank, the Frame widget may be used to
 create a margin around another widget.
 .IP
 .nf
-*frame.shadowStyle: blank
+*frame.shadowType: blank
 *frame.shadowWidth: 0
 *frame.Margin: 4
 .fi
 .LP
-By setting the margin to 4, the shadow width to 1, and the shadow style
+By setting the margin to 4, the shadow width to 1, and the shadow type
 to Lowered, a command widget may be designated as the "default" choice.
-This may be toggled on or off by changing the shadow style to blank.
+This may be toggled on or off by changing the shadow type to blank.
 .IP
 .nf
-*applyframe.shadowStyle: raised
+*applyframe.shadowType: raised
 *applyframe.shadowWidth: 1
 *applyframe.Margin: 4
 *applyframe.Command.label: apply
 
-*cancelframe.shadowStyle: blank
+*cancelframe.shadowType: blank
 *cancelframe.shadowWidth: 1
 *cancelframe.Margin: 4
 *cancelframe.Command.label: cancel
 .fi
 
 .LP
-By setting the Label resource and using the Frame widget to enclose
+By setting the Title resource and using the Frame widget to enclose
 another compound widget, the Frame widget may be used to label and
 group together other widgets.  For best results, set the shadowWidth
-to 2 and the shadowStyle to solid or groove.
+to 2 and the shadowType to solid or groove.
 .IP
 .nf
-*mainFrame.shadowStyle: groove
+*mainFrame.shadowType: groove
 *mainFrame.shadowWidth: 2
-*mainFrame.label: Preferences
+*mainFrame.maintitle.label: Preferences
 
 .LP
 Frames may be nested for more complex effects.
 .IP
 .nf
-*frame1.shadowStyle: ridge
-*frame2.shadowStyle: ridge
-*frame3.shadowStyle: ridge
+*frame1.shadowType: ridge
+*frame2.shadowType: ridge
+*frame3.shadowType: ridge
 *frame1.shadowWidth: 2
 *frame2.shadowWidth: 2
 *frame3.shadowWidth: 2
