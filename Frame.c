@@ -1,6 +1,6 @@
-/* $Id: Frame.c,v 1.1 1998/10/09 17:11:12 falk Exp falk $
- *
- * Frame.c - Put a decorative frame around any other widget.
+static	char	rcsid[] = "$Id$" ;
+
+/* Frame.c - Put a decorative frame around any other widget.
  *
  * Author: Edward A. Falk
  *	   falk@falconer.vip.best.com
@@ -9,6 +9,9 @@
  *
  *
  * $Log: Frame.c,v $
+ * Revision 1.1  1998/10/12 01:33:20  falk
+ * Initial revision
+ *
  * Revision 1.1  1998/10/09 17:11:12  falk
  * Initial revision
  *
@@ -21,12 +24,15 @@
 #include	<X11/IntrinsicP.h>
 #include	<X11/StringDefs.h>
 #include	<X11/Xmu/Converters.h>
+#include	<X11/Xmu/CharSet.h>
+#include	<X11/Xaw/Label.h>
+
 
 #include	"FrameP.h"
 #include	"Gcs.h"
 
-#define	MIN_SIZE	2
-#define	LBL_MARGIN	5
+#define	MIN_SIZE	2	/* make sure we don't have zero-size widget */
+#define	TTL_MARGIN	5	/* minimum margin for title */
 
 #ifndef	max
 #define	max(a,b)	((a)<(b)?(b):(a))
@@ -43,22 +49,20 @@
 #define	offset(field)	XtOffsetOf(FrameRec, frame.field)
 static XtResource resources[] = {
 
-  { XtNshadowStyle, XtCShadowStyle, XtRShadowStyle, sizeof(XtShadowStyle),
-	offset(style), XtRImmediate, (XtPointer)Solid},
+  { XtNshadowType, XtCShadowType, XtRShadowType, sizeof(XtShadowType),
+	offset(type), XtRImmediate, (XtPointer)Solid},
   { XtNshadowWidth, XtCShadowWidth, XtRDimension, sizeof(Dimension),
 	offset(shadowWidth), XtRImmediate, (XtPointer)2 },
   { XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
 	offset(foreground), XtRString, XtDefaultForeground},
-  { XtNlabel, XtCLabel, XtRString, sizeof(String),
-	offset(label), XtRString, NULL},
-  { XtNfont, XtCFont, XtRFontStruct, sizeof(XFontStruct *),
-	offset(font), XtRString, XtDefaultFont},
+  { XtNtitle, XtCTitle, XtRWidget, sizeof(Widget),
+	offset(title), XtRWidget, NULL},
   { XtNjustify, XtCJustify, XtRJustify, sizeof(XtJustify),
 	offset(justify), XtRString, XtJustifyLeft},
-  { XtNinternalWidth, XtCMargin, XtRDimension, sizeof(Dimension),
-	offset(internalWidth), XtRImmediate, (XtPointer)0 },
-  { XtNinternalHeight, XtCMargin, XtRDimension, sizeof(Dimension),
-	offset(internalHeight), XtRImmediate, (XtPointer)0 },
+  { XtNmarginWidth, XtCMargin, XtRDimension, sizeof(Dimension),
+	offset(marginWidth), XtRImmediate, (XtPointer)0 },
+  { XtNmarginHeight, XtCMargin, XtRDimension, sizeof(Dimension),
+	offset(marginHeight), XtRImmediate, (XtPointer)0 },
   { XtNallowResize, XtCAllowResize, XtRBoolean, sizeof(Boolean),
 	offset(allowResize), XtRImmediate, (XtPointer)True },
   {XtNbeNiceToColormap, XtCBeNiceToColormap, XtRBoolean, sizeof(Boolean),
@@ -67,8 +71,6 @@ static XtResource resources[] = {
       offset(top_shadow_contrast), XtRImmediate, (XtPointer) 20},
   {XtNbottomShadowContrast, XtCBottomShadowContrast, XtRInt, sizeof(int),
       offset(bot_shadow_contrast), XtRImmediate, (XtPointer) 40},
-  {XtNinsensitiveContrast, XtCInsensitiveContrast, XtRInt, sizeof(int),
-      offset(insensitive_contrast), XtRImmediate, (XtPointer) 33},
 
   { XtNborderWidth, XtCBorderWidth, XtRDimension, sizeof(Dimension),
          XtOffsetOf(RectObjRec,rectangle.border_width), XtRImmediate,
@@ -93,25 +95,23 @@ static	Boolean	FrameSetValues();
 static	XtGeometryResult	FrameQueryGeometry();
 static	XtGeometryResult	FrameGeometryManager();
 static	void	FrameChangeManaged();
-static	void	_CvtStringToShadowStyle() ;
+static	void	_CvtStringToShadowType() ;
 
 	/* internal privates */
 
 static	void	FrameAllocGCs() ;	/* get rendering GCs */
 static	void	FrameFreeGCs() ;	/* return rendering GCs */
-static	GC	FrameAllocFgGC();
 static	void	DrawFrame() ;		/* draw all frame */
 static	void	DrawFrame() ;		/* draw frame around contents */
 static	void	DrawTrim() ;		/* draw trim around a tab */
 static	void	DrawBorder() ;		/* draw border */
 static	void	PreferredSize() ;	/* compute preferred size */
-static	void	PreferredSize2() ;	/* compute preferred size */
+static	void	PreferredSize3() ;	/* compute preferred size */
+static	Widget	FrameChild() ;		/* find primary child widget */
 
 static	void	Draw3dBox() ;
 
 static	Pixel	AllocShadowPixel() ;
-static	Pixel	AllocGreyPixel() ;
-static	Pixmap	GetGrey50() ;
 
 #else
 
@@ -129,17 +129,17 @@ static XtGeometryResult FrameGeometryManager( Widget,
 				XtWidgetGeometry *, XtWidgetGeometry *) ;
 static void FrameChangeManaged( Widget w) ;
 
-static	void	_CvtStringToShadowStyle( XrmValuePtr, Cardinal *,
+static	void	_CvtStringToShadowType( XrmValuePtr, Cardinal *,
 		  XrmValuePtr, XrmValuePtr) ;
 
 
 
 static	void	FrameAllocGCs( FrameWidget fw ) ;
 static	void	FrameFreeGCs( FrameWidget fw ) ;
-static	GC	FrameAllocFgGC(Widget);
 static	void	PreferredSize( FrameWidget fw, Dimension *w, Dimension *h) ;
-static	void	PreferredSize2(FrameWidget,
-			int cw, int ch, Dimension *, Dimension *) ;
+static	void	PreferredSize3(FrameWidget, int cw, int ch, int tw, int th,
+			Dimension *, Dimension *) ;
+static	Widget	FrameChild(FrameWidget) ;
 
 #endif
 
@@ -236,9 +236,16 @@ WidgetClass frameWidgetClass = (WidgetClass)&frameClassRec;
 static void
 FrameClassInit()
 {
-    XtAddConverter( XtRString, XtRShadowStyle, _CvtStringToShadowStyle,
+    static XtConvertArgRec parentCvtArgs[] = {
+	{XtBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.parent),
+	     sizeof(Widget)}
+    };
+    XtAddConverter( XtRString, XtRShadowType, _CvtStringToShadowType,
     	NULL, 0) ;
     XtAddConverter( XtRString, XtRJustify, XmuCvtStringToJustify, NULL, 0) ;
+    XtSetTypeConverter (XtRString, XtRWidget, XmuNewCvtStringToWidget,
+			parentCvtArgs, XtNumber(parentCvtArgs), XtCacheNone,
+			(XtDestructor)NULL);
 }
 
 
@@ -270,12 +277,8 @@ FrameInit(request, new, args, num_args)
 
     /* defer GC allocation, etc., until Realize() time. */
     newFw->frame.foregroundGC =
-    newFw->frame.backgroundGC =
-    newFw->frame.greyGC =
     newFw->frame.topGC =
     newFw->frame.botGC = None ;
-
-    newFw->frame.grey50 = None ;
 
     newFw->frame.needs_layout = False ;
 }
@@ -324,58 +327,48 @@ FrameResize(w)
 	Widget		child ;
 	Dimension	cw,ch,bw ;
 	Dimension	sw = fw->frame.shadowWidth ;
-	String		lbl ;
-	XFontStruct	*font ;
-	int		tw,th ;		/* text width, height */
+	Widget		ttl = fw->frame.title ;
+	int		tw,th ;		/* title width, height */
 	int		cy ;		/* child y */
 
-	lbl = fw->frame.label ;
-	font = fw->frame.font ;
-	if( lbl != NULL && font != NULL )
+	if( ttl != NULL )
 	{
-	  /* TODO: handle non-horizontal fonts, 16-bit fonts */
-
-	  tw = XTextWidth(font, lbl, strlen(lbl)) ;
-	  th = font->ascent + font->descent ;
+	  tw = ttl->core.width ;
+	  th = ttl->core.height ;
 	  switch( fw->frame.justify ) {
 	    case XtJustifyLeft:
-	      fw->frame.lx = sw + fw->frame.internalWidth + LBL_MARGIN ;
+	      fw->frame.tx = sw + max(fw->frame.marginWidth, TTL_MARGIN) ;
 	      break ;
 	    case XtJustifyCenter:
-	      fw->frame.lx = (w->core.width - tw) / 2 ;
+	      fw->frame.tx = (w->core.width - tw) / 2 ;
 	      break ;
 	    case XtJustifyRight:
-	      fw->frame.lx = w->core.width -
-	      	(sw + fw->frame.internalWidth + LBL_MARGIN ) - tw;
+	      fw->frame.tx = w->core.width - tw - sw -
+	      	max(fw->frame.marginWidth, TTL_MARGIN ) ;
 	      break ;
 	  }
-	  fw->frame.ly = font->ascent ;
-	  fw->frame.lblBg.x = fw->frame.lx - LBL_MARGIN ;
-	  fw->frame.lblBg.y = 0 ;
-	  fw->frame.lblBg.width = tw + LBL_MARGIN*2 ;
-	  fw->frame.lblBg.height = th ;
-	  cy = th + fw->frame.internalHeight ;
+	  fw->frame.ty = 0 ;
+	  cy = max(th,sw) + fw->frame.marginHeight ;
 	  fw->frame.sy = th > sw ? (th - sw)/2 : 0 ;
 	  fw->frame.sh = fw->core.height - fw->frame.sy ;
+
+	  XtConfigureWidget(ttl, fw->frame.tx, fw->frame.ty, tw,th, 0) ;
 	}
 	else {
-	  cy = sw + fw->frame.internalHeight ;
+	  cy = sw + fw->frame.marginHeight ;
 	  fw->frame.sy = 0 ;
 	  fw->frame.sh = fw->core.height ;
 	}
 
-	if( fw->composite.children != NULL )
+	if( (child = FrameChild(fw)) != NULL )
 	{
 	  /* assign child position & size.  */
 
-	  child = fw->composite.children[0] ;
 	  bw = child->core.border_width ;
-	  cw = fw->core.width - 2*(bw+sw+fw->frame.internalWidth) ;
-	  ch = fw->core.height - cy - sw - fw->frame.internalHeight - 2*bw ;
+	  cw = fw->core.width - 2*(bw+sw+fw->frame.marginWidth) ;
+	  ch = fw->core.height - cy - sw - fw->frame.marginHeight - 2*bw ;
 
-	  XtConfigureWidget(child,
-	  	sw+fw->frame.internalWidth, cy,
-		cw,ch, bw) ;
+	  XtConfigureWidget(child, sw+fw->frame.marginWidth, cy, cw,ch, bw) ;
 	}
 
 	fw->frame.needs_layout = False ;
@@ -394,69 +387,46 @@ FrameExpose(w, event, region)
 {
 	FrameWidget	fw = (FrameWidget) w;
 	int		s = fw->frame.shadowWidth ;
-	XFontStruct	*font ;
-	String		lbl ;
+	Position	sy = fw->frame.sy ;
+	Dimension	sw = fw->core.width ;
+	Dimension	sh = fw->frame.sh ;
+	GC		topGC = fw->frame.topGC ;
+	GC		botGC = fw->frame.botGC ;
 
 	if( fw->frame.needs_layout )
 	  XtClass(w)->core_class.resize(w) ;
 
-	switch( fw->frame.style ) {
+	switch( fw->frame.type ) {
 	  case Blank: break ;
 	  case Solid:
-	    Draw3dBox(w, 0,fw->frame.sy, w->core.width,fw->frame.sh,
+	    Draw3dBox(w, 0,sy, sw,sh,
 		s, fw->frame.foregroundGC, fw->frame.foregroundGC) ;
 	    break ;
+
 	  case Raised:
-	    Draw3dBox(w, 0,fw->frame.sy, w->core.width,fw->frame.sh,
-		s, fw->frame.topGC, fw->frame.botGC) ;
+	    Draw3dBox(w, 0,sy, sw,sh, s, topGC, botGC) ;
 	    break ;
 	  case Lowered:
-	    Draw3dBox(w, 0,fw->frame.sy, w->core.width,fw->frame.sh,
-		s, fw->frame.botGC, fw->frame.topGC) ;
+	    Draw3dBox(w, 0,sy, sw,sh, s, botGC, topGC) ;
 	    break ;
+
 	  case Ridge:
-	    Draw3dBox(w, s/2, fw->frame.sy+s/2, w->core.width-s, fw->frame.sh-s,
-		s-s/2, fw->frame.botGC, fw->frame.topGC) ;
-	    Draw3dBox(w, 0,fw->frame.sy,w->core.width,fw->frame.sh,
-		s/2, fw->frame.topGC, fw->frame.botGC) ;
+	    Draw3dBox(w, s/2, sy+s/2, sw-s, sh-s, s-s/2, botGC, topGC) ;
+	    Draw3dBox(w, 0,sy,sw,sh, s/2, topGC, botGC) ;
 	    break ;
 	  case Groove:
-	    Draw3dBox(w, s/2, fw->frame.sy+s/2, w->core.width-s, fw->frame.sh-s,
-		s-s/2, fw->frame.topGC, fw->frame.botGC) ;
-	    Draw3dBox(w, 0,fw->frame.sy, w->core.width,fw->frame.sh,
-		s/2, fw->frame.botGC, fw->frame.topGC) ;
+	    Draw3dBox(w, s/2, sy+s/2, sw-s, sh-s, s-s/2, topGC, botGC) ;
+	    Draw3dBox(w, 0,sy, sw,sh, s/2, botGC, topGC) ;
 	    break ;
 
 	  case Plateau:
-	    Draw3dBox(w, 0,fw->frame.sy+0,
-	    	w->core.width, fw->frame.sh,
-		2, fw->frame.topGC, fw->frame.botGC) ;
-	    Draw3dBox(w, s-2, fw->frame.sy+s-2,
-	    	w->core.width-s*2+4, fw->frame.sh-s*2+4,
-		2, fw->frame.botGC, fw->frame.topGC) ;
+	    Draw3dBox(w, 0,sy+0, sw, sh, 2, topGC, botGC) ;
+	    Draw3dBox(w, s-2, sy+s-2, sw-s*2+4, sh-s*2+4, 2, botGC, topGC) ;
 	    break ;
-
 	  case Trough:
-	    Draw3dBox(w, 0,fw->frame.sy+0,
-	    	w->core.width,fw->frame.sh,
-		2, fw->frame.botGC, fw->frame.topGC) ;
-	    Draw3dBox(w, s-2, fw->frame.sy+s-2,
-	    	w->core.width-s*2+4, fw->frame.sh-s*2+4,
-		2, fw->frame.topGC, fw->frame.botGC) ;
-	}
-
-
-	lbl = fw->frame.label ;
-	font = fw->frame.font ;
-	if( lbl != NULL && font != NULL )
-	{
-	  /* TODO: handle non-horizontal fonts, 16-bit fonts */
-	  XFillRectangles(XtDisplay(w), XtWindow(w), fw->frame.backgroundGC,
-	    &fw->frame.lblBg, 1) ;
-	  XDrawString(XtDisplay(w), XtWindow(w),
-	    XtIsSensitive(w) ? fw->frame.foregroundGC : fw->frame.greyGC,
-	    fw->frame.lx, fw->frame.ly,
-	    fw->frame.label, strlen(fw->frame.label)) ;
+	    Draw3dBox(w, 0,sy+0, sw,sh, 2, botGC, topGC) ;
+	    Draw3dBox(w, s-2, sy+s-2, sw-s*2+4, sh-s*2+4, 2, topGC, botGC) ;
+	    break ;
 	}
 }
 
@@ -473,14 +443,11 @@ FrameSetValues(current, request, new, args, num_args)
 	FrameWidget curfw = (FrameWidget) current ;
 	FrameWidget fw = (FrameWidget) new ;
 	Boolean	needRedraw = False ;
-	Widget	child ;
-	int	i ;
 
-	if( fw->frame.font != curfw->frame.font  ||
-	    fw->frame.label != curfw->frame.label ||
+	if( fw->frame.title != curfw->frame.title ||
 	    fw->frame.shadowWidth != curfw->frame.shadowWidth  ||
-	    fw->frame.internalWidth != curfw->frame.internalWidth ||
-	    fw->frame.internalHeight != curfw->frame.internalHeight )
+	    fw->frame.marginWidth != curfw->frame.marginWidth ||
+	    fw->frame.marginHeight != curfw->frame.marginHeight )
 	{
 	  needRedraw = True ;
 	  fw->frame.needs_layout = True ;
@@ -491,12 +458,9 @@ FrameSetValues(current, request, new, args, num_args)
 	if( fw->core.background_pixel != curfw->core.background_pixel ||
 	    fw->core.background_pixmap != curfw->core.background_pixmap ||
 	    fw->frame.foreground != curfw->frame.foreground  ||
-	    fw->frame.font != curfw->frame.font  ||
 	    fw->frame.be_nice_to_cmap != curfw->frame.be_nice_to_cmap  ||
 	    fw->frame.top_shadow_contrast != curfw->frame.top_shadow_contrast ||
-	    fw->frame.bot_shadow_contrast != curfw->frame.bot_shadow_contrast ||
-	    fw->frame.insensitive_contrast !=
-	    				curfw->frame.insensitive_contrast )
+	    fw->frame.bot_shadow_contrast != curfw->frame.bot_shadow_contrast )
 	{
 	  FrameFreeGCs(fw) ;
 	  FrameAllocGCs(fw) ;
@@ -504,7 +468,7 @@ FrameSetValues(current, request, new, args, num_args)
 	}
 
 	else if( fw->core.sensitive != curfw->core.sensitive  ||
-		 fw->frame.style != curfw->frame.style  ||
+		 fw->frame.type != curfw->frame.type  ||
 		 fw->frame.justify != curfw->frame.justify )
 	  needRedraw = True ;
 
@@ -555,7 +519,6 @@ FrameGeometryManager(w, req, reply)
 
 {
 	FrameWidget		fw = (FrameWidget) XtParent(w);
-	Dimension		s = fw->frame.shadowWidth ;
 	XtGeometryResult	result ;
 
 	/* Position request always denied */
@@ -579,21 +542,44 @@ FrameGeometryManager(w, req, reply)
 	  return XtGeometryNo ;
 
 	/* Size changes must see if the new size can be accomodated.
-	 * A request to resize will be accepted only if the Frame parent can
-	 * resize to accomodate.
+	 * A request to resize will be accepted only if the Frame can be
+	 * resized to accomodate.
 	 */
 
 	if (req->request_mode & (CWWidth | CWHeight | CWBorderWidth))
 	{
-	  Dimension	cw,ch ;		/* requested size, including borders */
+	  Dimension	cw,ch ;		/* child size, including borders */
+	  Dimension	tw,th ;		/* title size, including borders */
 	  Dimension	wid,hgt ;	/* Frame widget size */
 	  Dimension	margin = fw->frame.shadowWidth + req->border_width ;
 	  Dimension	oldWid = fw->core.width, oldHgt = fw->core.height ;
 	  XtWidgetGeometry	myrequest, myreply ;
+	  Widget	child = FrameChild(fw) ;
+	  Widget	ttl = fw->frame.title ;
 
-	  cw = req->width + req->border_width*2 ;
-	  ch = req->height + req->border_width*2 ;
-	  PreferredSize2(fw, cw,ch, &wid, &hgt) ;
+	  if( w == child ) {
+	    cw = req->width + req->border_width*2 ;
+	    ch = req->height + req->border_width*2 ;
+	  }
+	  else if( child != NULL ) {
+	    cw = child->core.width ;
+	    ch = child->core.height ;
+	  }
+	  else
+	    cw = ch = 0 ;
+
+	  if( w == ttl ) {
+	    tw = req->width + req->border_width*2 ;
+	    th = req->height + req->border_width*2 ;
+	  }
+	  else if( ttl != NULL ) {
+	    tw = ttl->core.width ;
+	    th = ttl->core.height ;
+	  }
+	  else
+	    tw = th = 0 ;
+
+	  PreferredSize3(fw, cw,ch, tw,th, &wid, &hgt) ;
 
 	  /* Ask to be resized to accomodate. */
 
@@ -619,15 +605,17 @@ FrameGeometryManager(w, req, reply)
 
 	  /* If parent offers a compromise, we do the same. */
 	  if( result == XtGeometryAlmost ) {
-	    reply->width = myreply.width - (margin+fw->frame.internalWidth)*2 ;
-	    reply->height= myreply.height- (margin+fw->frame.internalHeight)*2;
+	    reply->width = myreply.width - (margin+fw->frame.marginWidth)*2 ;
+	    reply->width = min(reply->width, req->width) ;
+	    reply->height= myreply.height- (margin+fw->frame.marginHeight)*2;
+	    reply->height = min(reply->height, req->height) ;
 	    reply->border_width = req->border_width ;
 	    if( reply->width < 1 || reply->height < 1 )
-	      return XtGeometryNo ;
+	      result = XtGeometryNo ;
 	  }
 
 	  else if( result == XtGeometryYes &&
-	  	   !(req->request_mode & XtCWQueryOnly) )
+		   !(req->request_mode & XtCWQueryOnly) )
 	  {
 	    w->core.width = req->width ;
 	    w->core.height = req->height ;
@@ -684,11 +672,7 @@ FrameAllocGCs(fw)
 	Widget	w = (Widget)fw ;
 
 	fw->frame.foregroundGC =
-		AllocFgGC(w, fw->frame.foreground, fw->frame.font->fid ) ;
-	fw->frame.backgroundGC = AllocBackgroundGC(w) ;
-	fw->frame.greyGC = AllocGreyGC(w, fw->frame.foreground,
-		fw->frame.font->fid, fw->frame.insensitive_contrast,
-		&fw->frame.grey50, fw->frame.be_nice_to_cmap) ;
+		AllocFgGC(w, fw->frame.foreground, None ) ;
 	fw->frame.topGC = AllocTopShadowGC(w, fw->frame.top_shadow_contrast,
 		fw->frame.be_nice_to_cmap) ;
 	fw->frame.botGC = AllocBotShadowGC(w, fw->frame.bot_shadow_contrast,
@@ -703,8 +687,6 @@ FrameFreeGCs(fw)
 	Widget w = (Widget) fw;
 
 	XtReleaseGC(w, fw->frame.foregroundGC) ;
-	XtReleaseGC(w, fw->frame.greyGC) ;
-	XtReleaseGC(w, fw->frame.backgroundGC) ;
 	XtReleaseGC(w, fw->frame.topGC) ;
 	XtReleaseGC(w, fw->frame.botGC) ;
 }
@@ -726,47 +708,64 @@ PreferredSize(fw, reply_width, reply_height)
 	Dimension	*reply_width, *reply_height;	/* total widget size */
 {
 	Dimension	cw,ch ;		/* child width, height */
+	Dimension	tw,th ;		/* title width, height */
 	XtWidgetGeometry preferred ;
+	Widget		child = FrameChild(fw) ;
+	Widget		ttl = fw->frame.title ;
 
-	if( fw->composite.num_children > 0 ) {
-	  XtQueryGeometry(*(fw->composite.children), NULL, &preferred) ;
+	if( child != NULL ) {
+	  XtQueryGeometry(child, NULL, &preferred) ;
 	  cw = preferred.width + 2*preferred.border_width ;
 	  ch = preferred.height + 2*preferred.border_width ;
 	}
 	else
 	  cw = ch = MIN_SIZE ;
 
-	PreferredSize2(fw, cw,ch, reply_width, reply_height) ;
-}
-
-
-	/* Find preferred size, given child's preferred size. */
-
-static	void
-PreferredSize2(fw, cw,ch, reply_width, reply_height)
-	FrameWidget	fw;
-	int		cw,ch ;		/* child width, height */
-	Dimension	*reply_width, *reply_height;	/* total widget size */
-{
-	Dimension	tw,th ;		/* text width, height */
-	Dimension	sw = fw->frame.shadowWidth ;
-	String		lbl ;
-	XFontStruct	*font ;
-	int		wid,hgt ;
-
-	lbl = fw->frame.label ;
-	font = fw->frame.font ;
-	if( lbl != NULL && font != NULL )
-	{
-	  /* TODO: handle non-horizontal fonts, 16-bit fonts */
-	  th = font->ascent + font->descent ;
-	  tw = XTextWidth(font, lbl, strlen(lbl)) + LBL_MARGIN*2 ;
+	if( ttl != NULL ) {
+	  XtQueryGeometry(ttl, NULL, &preferred) ;
+	  tw = preferred.width + 2*preferred.border_width ;
+	  th = preferred.height + 2*preferred.border_width ;
 	}
 	else
 	  tw = th = 0 ;
 
-	*reply_width = max(cw,tw) + 2*(sw + fw->frame.internalWidth) ;
-	*reply_height = max(sw,th) + ch + 2*fw->frame.internalHeight + sw ;
+	PreferredSize3(fw, cw,ch, tw,th, reply_width, reply_height) ;
+}
+
+
+	/* Find preferred size, given child and title's preferred sizes. */
+
+static	void
+PreferredSize3(fw, cw,ch, tw,th, reply_width, reply_height)
+	FrameWidget	fw;
+	int		cw,ch ;		/* child width, height */
+	int		tw,th ;		/* title width, height */
+	Dimension	*reply_width, *reply_height;	/* total widget size */
+{
+	Dimension	sw = fw->frame.shadowWidth ;
+
+	cw += 2*fw->frame.marginWidth ;
+	tw += 2*max(fw->frame.marginWidth, TTL_MARGIN) ;
+
+	*reply_width = max(cw,tw) + 2*sw ;
+	*reply_height = max(sw,th) + ch + 2*fw->frame.marginHeight + sw ;
+}
+
+
+static	Widget
+FrameChild(fw)
+    FrameWidget	fw ;
+{
+    Widget	*childP = NULL ;
+    Widget	ttl = fw->frame.title ;
+    int		i ;
+
+    if( (childP = fw->composite.children) != NULL )
+      for(i=fw->composite.num_children; --i >= 0; ++childP )
+	if( *childP != ttl )
+	  return *childP ;
+
+    return NULL ;
 }
 
 
@@ -780,39 +779,37 @@ PreferredSize2(fw, cw,ch, reply_width, reply_height)
 
 /* ARGSUSED */
 static	void
-_CvtStringToShadowStyle(args, num_args, fromVal, toVal)
+_CvtStringToShadowType(args, num_args, fromVal, toVal)
     XrmValuePtr args;		/* unused */
     Cardinal    *num_args;	/* unused */
     XrmValuePtr fromVal ;
     XrmValuePtr toVal ;
 {
     String	str = (String)fromVal->addr ;
-    static XtShadowStyle	style;
+    int		i ;
+    static XtShadowType	type;
+    static struct {char *name; XtShadowType type;} types[] = {
+      {"blank", Blank}, {"none", Blank}, {"solid", Solid},
+      {"raised", Raised}, {"shadow_out", Raised},
+      {"lowered", Lowered}, {"shadow_in", Lowered},
+      {"ridge", Ridge}, {"shadow_etched_in", Ridge},
+      {"groove", Groove}, {"shadow_etched_out", Groove},
+      {"plateau", Plateau}, {"trough", Trough},
+    } ;
 
-    if( XmuCompareISOLatin1(str, "blank") == 0 ||
-        XmuCompareISOLatin1(str, "none") == 0 )
-      style = Blank ;
-    else if( XmuCompareISOLatin1(str, "solid") == 0 )
-      style = Solid ;
-    else if( XmuCompareISOLatin1(str, "raised") == 0 )
-      style = Raised ;
-    else if( XmuCompareISOLatin1(str, "lowered") == 0 )
-      style = Lowered ;
-    else if( XmuCompareISOLatin1(str, "ridge") == 0 )
-      style = Ridge ;
-    else if( XmuCompareISOLatin1(str, "groove") == 0 )
-      style = Groove ;
-    else if( XmuCompareISOLatin1(str, "plateau") == 0 )
-      style = Plateau ;
-    else if( XmuCompareISOLatin1(str, "trough") == 0 )
-      style = Trough ;
-    else {
-      XtStringConversionWarning(fromVal->addr, XtRShadowStyle);
+    for(i=0; i<XtNumber(types); ++i)
+    if( XmuCompareISOLatin1(str, types[i].name) == 0 ) {
+      type = types[i].type ;
+      break ;
+    }
+
+    if( i > XtNumber(types) ) {
+      XtStringConversionWarning(fromVal->addr, XtRShadowType);
       toVal->size = 0 ;
       toVal->addr = NULL ;
       return ;
     }
 
-    toVal->size = sizeof(style) ;
-    toVal->addr = (XPointer) &style;
+    toVal->size = sizeof(type) ;
+    toVal->addr = (XPointer) &type;
 }
