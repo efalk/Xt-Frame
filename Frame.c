@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id$" ;
+static	char	rcsid[] = "$Id: Frame.c,v 1.2 1998/12/15 06:35:16 falk Exp falk $" ;
 
 /* Frame.c - Put a decorative frame around any other widget.
  *
@@ -9,6 +9,10 @@ static	char	rcsid[] = "$Id$" ;
  *
  *
  * $Log: Frame.c,v $
+ * Revision 1.2  1998/12/15 06:35:16  falk
+ * label is now another child widget.  Some names
+ * changed for compatibility with Motif.
+ *
  * Revision 1.1  1998/10/12 01:33:20  falk
  * Initial revision
  *
@@ -792,8 +796,8 @@ _CvtStringToShadowType(args, num_args, fromVal, toVal)
       {"blank", Blank}, {"none", Blank}, {"solid", Solid},
       {"raised", Raised}, {"shadow_out", Raised},
       {"lowered", Lowered}, {"shadow_in", Lowered},
-      {"ridge", Ridge}, {"shadow_etched_in", Ridge},
-      {"groove", Groove}, {"shadow_etched_out", Groove},
+      {"ridge", Ridge}, {"shadow_etched_out", Ridge},
+      {"groove", Groove}, {"shadow_etched_in", Groove},
       {"plateau", Plateau}, {"trough", Trough},
     } ;
 
