@@ -1,12 +1,28 @@
-! $Id$
-
-! Application-wide actions table.
+! $Id: Framedemo,v 1.1 1998/10/12 01:39:12 falk Exp falk $
+!
+! This defaults file controls the framedemo program.  The following
+! Frame widgets are defined:
+!
+!	marginframe	creates a 10-pixel margin around everything else
+!	mainframe	creates a labeled border around all the other frames
+!	frame1		solid frame
+!	frame2		raised border
+!	frame3		lowered border
+!	frame4		blank border (may be used for e.g. margins)
+!	frame5		groove border
+!	frame6		ridge border
+!	frame7		plateau border
+!	frame8		trough border
+!	frame9		using frames with color
+!	framen-framen3	nested frames for special effect.
+!	frame10		Place a "default" indicator border around "Yes" button
+!	frame11		Place a blank border around "No" button.
+!
+! Selecting "Yes" or "No" causes the "Default" border to move.
+!
 
 Framedemo.baseTranslations: #augment\n\
 	<Message>WM_PROTOCOLS: WMProtocols()\n
-
-
-! Framedemo defaults go here.
 
 *borderWidth: 0
 
@@ -86,3 +102,4 @@ Framedemo.baseTranslations: #augment\n\
 *frame11.Margin: 4
 *frame11.fromVert: framen
 *frame11.fromHoriz: frame10
+
