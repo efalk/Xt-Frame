@@ -1,0 +1,20 @@
+# $Id$
+
+CC = cc
+
+CFLAGS = -O -Xc -xF -xcg92 -I/usr/openwin/include  -Dsun -Dsparc -DSVR4 -DSYSV
+
+LIBS = -L/usr/openwin/lib -lXaw -lXmu -lXt -lXext -lX11
+
+SRCS = framedemo.c Frame.c Gcs.c
+OBJS = framedemo.o Frame.o Gcs.o
+
+all: framedemo
+
+framedemo: $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	rm -f framedemo
+	rm -f *.CKP *.BAK *.bak *.o core errs tags TAGS
+

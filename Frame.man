@@ -1,0 +1,190 @@
+." $Id$
+." view with "tbl | nroff -man"
+."
+.TH "Frame" 3 "October 1998" "Version 1.0" ""
+.SH NAME
+Frame
+.SH DESCRIPTION
+The Frame widget manages one child widget, placing a decorative border
+around it.  An optional label may also be specified, which appears along
+the top of the frame.
+
+.SH CLASS
+Core => Compound => Frame
+
+Frame does not require any specific widget set, and may be combined with
+any other widget set.
+
+.SH RESOURCES
+
+.ps -2
+.TS
+center box;
+cBsss
+lB|lB|lB|lB
+l|l|l|l.
+Frame
+Name	Class	Type	Default
+=
+shadowStyle	ShadowStyle	ShadowStyle	solid
+shadowWidth	ShadowWidth	Dimension	2
+foreground	Foreground	Pixel	XtDefaultForeground
+label	Label	String	NULL
+font	Font	XFontStruct *	XtDefaultFont
+justify	Justify	XtJustify	left
+internalWidth	Margin	Dimension	0
+internalHeight	Margin	Dimension	0
+allowResize	AllowResize	Boolean	True
+
+beNiceToColormap	BeNiceToColormap	Boolean	False
+topShadowContrast	TopShadowContrast	int	20
+bottomShadowContrast	BottomShadowContrast	int	40
+insensitiveContrast	InsensitiveContrast	int	33
+.TE
+.ps +2
+
+.LP
+See the \fBCore\fP and \fBComposite\fP widgets for more resources.
+
+.SS Descriptions.
+
+.TP
+.I ShadowStyle
+
+.ps -2
+.TS
+box;
+cBs
+cB|cB
+l|c.
+Shadow Styles
+Style	Best width
+=
+Blank
+Raised	1 or 2
+Lowered	1 or 2
+Ridge	2 or 4
+Groove	2 or 4
+Plateau	6
+Trough	6
+.TE
+.ps +2
+
+.TP
+.I ShadowWidth
+Width of decorative border.  For
+.B Raised
+and
+.B Groove
+styles, this should be an even number.  For 
+.B Trough
+and
+.B Plateau
+styles, this should be six or more.
+
+.TP
+.I Foreground
+Specifies the color used for the label and border (if solid.)
+
+.TP
+.I Font
+Font used to draw label.
+
+.TP
+.I Justify
+Controls justification of the label.  One of
+.B left, right, centered.
+
+.TP
+.I InternalWidth, InternalHeight
+Specifies the margins around the frame's child.
+
+.TP
+.I AllowResize
+If True, the frame widget will honor all child resize requests to
+the extent possible.  If False, the frame widget will refuse all child
+resize requests.
+
+.TP
+.I BeNiceToColormap
+Boolean.  When true, Frame widget allocates fewer colors for itself.
+
+.TP
+.I TopShadowContrast
+The contrast used for computing the shade of the top shadow color.  0-100.
+
+.TP
+.I BottomShadowContrast
+The contrast used for computing the shade of the bottom shadow color.  0-100.
+
+.TP
+.I InsensitiveContrast.
+Determines how "grey" the label appears when insensitive.  0-100.
+
+.SH EXAMPLES
+.LP
+Adding decorative borders around other widgets which may not have
+such options.
+.IP
+.nf
+*frame.shadowStyle: ridge
+*frame.shadowWidth: 2
+*frame.Margin: 2
+.fi
+
+.LP
+By setting the shadow style to blank, the Frame widget may be used to
+create a margin around another widget.
+.IP
+.nf
+*frame.shadowStyle: blank
+*frame.shadowWidth: 0
+*frame.Margin: 4
+.fi
+.LP
+By setting the margin to 4, the shadow width to 1, and the shadow style
+to Lowered, a command widget may be designated as the "default" choice.
+This may be toggled on or off by changing the shadow style to blank.
+.IP
+.nf
+*applyframe.shadowStyle: raised
+*applyframe.shadowWidth: 1
+*applyframe.Margin: 4
+*applyframe.Command.label: apply
+
+*cancelframe.shadowStyle: blank
+*cancelframe.shadowWidth: 1
+*cancelframe.Margin: 4
+*cancelframe.Command.label: cancel
+.fi
+
+.LP
+By setting the Label resource and using the Frame widget to enclose
+another compound widget, the Frame widget may be used to label and
+group together other widgets.  For best results, set the shadowWidth
+to 2 and the shadowStyle to solid or groove.
+.IP
+.nf
+*mainFrame.shadowStyle: groove
+*mainFrame.shadowWidth: 2
+*mainFrame.label: Preferences
+
+.LP
+Frames may be nested for more complex effects.
+.IP
+.nf
+*frame1.shadowStyle: ridge
+*frame2.shadowStyle: ridge
+*frame3.shadowStyle: ridge
+*frame1.shadowWidth: 2
+*frame2.shadowWidth: 2
+*frame3.shadowWidth: 2
+
+
+.SH AUTHOR
+Edward Falk <falk@falconer.vip.best.com>
+
+.SH COPYRIGHT
+Copyright 1998 by Edward A. Falk.  This widget may be used freely in any
+free software.  Source code is freely distributable provided that my name
+is not removed from it.

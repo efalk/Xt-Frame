@@ -1,0 +1,14 @@
+# $Id$
+
+# CDEBUGFLAGS = -g -DDEBUG -pedantic
+
+SRCS = framedemo.c Frame.c Gcs.c
+OBJS = $(SRCS:.c=.o)
+
+LOCAL_LIBRARIES = XawClientLibs
+
+MANPATH = /usr/local/man
+BINDIR = /usr/local/bin
+
+ComplexProgramTarget(framedemo)
+
