@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id$" ;
+static	char	rcsid[] = "$Id: framedemo.c,v 1.1 1998/10/12 01:36:14 falk Exp falk $" ;
 
 #include <stdio.h>
 
@@ -34,6 +34,74 @@ static String fallback[] = {
 	"*mainPanel.height:	300",
 	"*sampleBox.height:	100",
 	"*sampleBox.border:	black",
+
+	"Framedemo.baseTranslations: <Message>WM_PROTOCOLS: WMProtocols()",
+
+	"*borderWidth: 0",
+	"*marginframe.shadowWidth: 0",
+	"*marginframe.shadowStyle: blank",
+	"*marginframe.Margin: 10",
+	"*mainframe.label: Frame label",
+	"*mainframe.shadowWidth: 2",
+	"*mainframe.shadowStyle: groove",
+	"*mainframe.Margin: 4",
+	"*frame1.shadowStyle: solid",
+	"*frame1.lbl.label: solid",
+	"*frame2.shadowStyle: raised",
+	"*frame2.lbl.label: raised",
+	"*frame2.shadowWidth: 1",
+	"*frame2.fromHoriz: frame1",
+	"*frame3.shadowStyle: lowered",
+	"*frame3.lbl.label: lowered",
+	"*frame3.shadowWidth: 1",
+	"*frame3.fromHoriz: frame2",
+	"*frame4.shadowStyle: blank",
+	"*frame4.lbl.label: blank",
+	"*frame4.fromHoriz: frame3",
+	"*frame5.shadowStyle: groove",
+	"*frame5.lbl.label: groove",
+	"*frame5.fromVert: frame1",
+	"*frame6.shadowStyle: ridge",
+	"*frame6.lbl.label: ridge",
+	"*frame6.fromVert: frame1",
+	"*frame6.fromHoriz: frame5",
+	"*frame7.shadowStyle: plateau",
+	"*frame7.lbl.label: plateau",
+	"*frame7.shadowWidth: 6",
+	"*frame7.fromVert: frame1",
+	"*frame7.fromHoriz: frame6",
+	"*frame8.shadowStyle: trough",
+	"*frame8.lbl.label: trough",
+	"*frame8.shadowWidth: 6",
+	"*frame8.fromHoriz: frame7",
+	"*frame8.fromVert: frame1",
+	"*frame9.shadowStyle: ridge",
+	"*frame9.lbl.label: color",
+	"*frame9.shadowWidth: 4",
+	"*frame9.fromVert: frame7",
+	"*frame9*background: maroon",
+	"*framen.shadowStyle: ridge",
+	"*framen.shadowWidth: 2",
+	"*framen2.shadowStyle: ridge",
+	"*framen2.shadowWidth: 2",
+	"*framen3.shadowStyle: ridge",
+	"*framen3.shadowWidth: 2",
+	"*framen*Margin: 2",
+	"*framen*lbl.label: nested",
+	"*framen.fromHoriz: frame9",
+	"*framen.fromVert: frame7",
+	"*frame10.shadowStyle: lowered",
+	"*frame10.btn.label: yes",
+	"*frame10.shadowWidth: 1",
+	"*frame10.Margin: 4",
+	"*frame10.fromVert: framen",
+	"*frame11.shadowStyle: blank",
+	"*frame11.btn.label: no",
+	"*frame11.shadowWidth: 1",
+	"*frame11.Margin: 4",
+	"*frame11.fromVert: framen",
+	"*frame11.fromHoriz: frame10",
+
 	NULL
 };
 
@@ -56,18 +124,9 @@ XtActionsRec	fd_actions[] = {
 
 main(int argc, char **argv)
 {
-	/* this could all be done with a single call to XtAppInitialize(),
-	 * but I'm spelling it out for illustration purposes.
-	 */
-
-	XtToolkitInitialize() ;
-	app_ctx = XtCreateApplicationContext() ;
-	XtAppSetFallbackResources(app_ctx, fallback) ;
-	dpy = XtOpenDisplay(app_ctx, NULL, "framedemo", "Framedemo",
-		NULL, 0, &argc, argv) ;
-	topLevel = XtVaAppCreateShell("framedemo", "Framedemo",
-		applicationShellWidgetClass, dpy,
-		0) ;
+	topLevel = XtAppInitialize(&app_ctx, "Framedemo", NULL,0,
+		&argc,argv, fallback, NULL,0) ;
+	dpy = XtDisplay(topLevel) ;
 
 	XtAppAddActions(app_ctx, fd_actions, XtNumber(fd_actions));
 
