@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id: Frame.c,v 1.4 1999/03/06 16:37:34 falk Exp falk $" ;
+static	char	rcsid[] = "$Id: Frame.c,v 1.5 1999/08/26 17:49:03 falk Exp falk $" ;
 
 /* Frame.c - Put a decorative frame around any other widget.
  *
@@ -9,6 +9,9 @@ static	char	rcsid[] = "$Id: Frame.c,v 1.4 1999/03/06 16:37:34 falk Exp falk $" ;
  *
  *
  * $Log: Frame.c,v $
+ * Revision 1.5  1999/08/26 17:49:03  falk
+ * now handles changes before being realized
+ *
  * Revision 1.4  1999/03/06 16:37:34  falk
  * Rewrite of geometry management
  *
@@ -587,8 +590,8 @@ FrameGeometryManager(w, req, reply)
 	/* Position request always denied */
 
 	if( !fw->frame.allowResize  ||
-	    (req->request_mode & CWX) && req->x != w->core.x ||
-	    (req->request_mode & CWY) && req->y != w->core.y )
+	    ((req->request_mode & CWX) && req->x != w->core.x) ||
+	    ((req->request_mode & CWY) && req->y != w->core.y) )
 	  return XtGeometryNo ;
 
 	/* Make all three fields in the request valid */
