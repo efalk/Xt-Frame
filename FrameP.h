@@ -1,4 +1,4 @@
-/* $Id: FrameP.h,v 1.1 1998/10/09 17:11:12 falk Exp falk $
+/* $Id: FrameP.h,v 1.1 1998/10/12 01:33:20 falk Exp falk $
  *
  * FrameP.h - Private definitions for Frame widget
  * 
@@ -39,30 +39,24 @@ extern FrameClassRec frameClassRec;
 /* New fields for the Frame widget record */
 typedef struct {
     /* resources */
-    XtShadowStyle style ;
+    XtShadowType type ;
     Dimension	shadowWidth ;
     Pixel	foreground ;
-    String	label ;
-    XFontStruct	*font ;
+    Widget	title ;
     XtJustify	justify ;
-    Dimension   internalHeight, internalWidth ;
+    Dimension   marginHeight, marginWidth ;
     Boolean	allowResize ;
     Boolean	be_nice_to_cmap ;
     int		top_shadow_contrast ;
     int		bot_shadow_contrast ;
-    int		insensitive_contrast ;
 
     /* private state */
-    GC		foregroundGC ;
-    GC		backgroundGC ;
-    GC		greyGC ;
+    GC		foregroundGC ;		/* for solid borders */
     GC		topGC ;
     GC		botGC ;
-    Pixmap	grey50 ;		/* TODO: cache this elsewhere */
     Boolean	needs_layout ;
-    Position	lx,ly ;			/* label posn */
+    Position	tx,ty ;			/* title posn */
     Position	sy,sh ;			/* shadow position, height */
-    XRectangle	lblBg ;			/* region behind label to clear */
 } FramePart;
 
 
