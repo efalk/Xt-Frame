@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id: framedemo.c,v 1.1 1998/10/12 01:36:14 falk Exp falk $" ;
+static	char	rcsid[] = "$Id: framedemo.c,v 1.2 1998/10/19 17:07:36 falk Exp falk $" ;
 
 #include <stdio.h>
 
@@ -29,73 +29,69 @@ static	XtAppContext	app_ctx ;
 static	Widget	topLevel, yesFrame, noFrame, yesBut, noBut ;
 
 static String fallback[] = {
-	"*background:		gray",
-	"*mainPanel.width:	500",
-	"*mainPanel.height:	300",
-	"*sampleBox.height:	100",
-	"*sampleBox.border:	black",
 
 	"Framedemo.baseTranslations: <Message>WM_PROTOCOLS: WMProtocols()",
 
 	"*borderWidth: 0",
 	"*marginframe.shadowWidth: 0",
-	"*marginframe.shadowStyle: blank",
+	"*marginframe.shadowType: blank",
 	"*marginframe.Margin: 10",
 	"*mainframe.label: Frame label",
 	"*mainframe.shadowWidth: 2",
-	"*mainframe.shadowStyle: groove",
+	"*mainframe.shadowType: groove",
 	"*mainframe.Margin: 4",
-	"*frame1.shadowStyle: solid",
+	"*maintitle.label: Main Title",
+	"*frame1.shadowType: solid",
 	"*frame1.lbl.label: solid",
-	"*frame2.shadowStyle: raised",
+	"*frame2.shadowType: raised",
 	"*frame2.lbl.label: raised",
 	"*frame2.shadowWidth: 1",
 	"*frame2.fromHoriz: frame1",
-	"*frame3.shadowStyle: lowered",
+	"*frame3.shadowType: lowered",
 	"*frame3.lbl.label: lowered",
 	"*frame3.shadowWidth: 1",
 	"*frame3.fromHoriz: frame2",
-	"*frame4.shadowStyle: blank",
+	"*frame4.shadowType: blank",
 	"*frame4.lbl.label: blank",
 	"*frame4.fromHoriz: frame3",
-	"*frame5.shadowStyle: groove",
+	"*frame5.shadowType: groove",
 	"*frame5.lbl.label: groove",
 	"*frame5.fromVert: frame1",
-	"*frame6.shadowStyle: ridge",
+	"*frame6.shadowType: ridge",
 	"*frame6.lbl.label: ridge",
 	"*frame6.fromVert: frame1",
 	"*frame6.fromHoriz: frame5",
-	"*frame7.shadowStyle: plateau",
+	"*frame7.shadowType: plateau",
 	"*frame7.lbl.label: plateau",
 	"*frame7.shadowWidth: 6",
 	"*frame7.fromVert: frame1",
 	"*frame7.fromHoriz: frame6",
-	"*frame8.shadowStyle: trough",
+	"*frame8.shadowType: trough",
 	"*frame8.lbl.label: trough",
 	"*frame8.shadowWidth: 6",
 	"*frame8.fromHoriz: frame7",
 	"*frame8.fromVert: frame1",
-	"*frame9.shadowStyle: ridge",
+	"*frame9.shadowType: ridge",
 	"*frame9.lbl.label: color",
 	"*frame9.shadowWidth: 4",
 	"*frame9.fromVert: frame7",
 	"*frame9*background: maroon",
-	"*framen.shadowStyle: ridge",
+	"*framen.shadowType: ridge",
 	"*framen.shadowWidth: 2",
-	"*framen2.shadowStyle: ridge",
+	"*framen2.shadowType: ridge",
 	"*framen2.shadowWidth: 2",
-	"*framen3.shadowStyle: ridge",
+	"*framen3.shadowType: ridge",
 	"*framen3.shadowWidth: 2",
 	"*framen*Margin: 2",
 	"*framen*lbl.label: nested",
 	"*framen.fromHoriz: frame9",
 	"*framen.fromVert: frame7",
-	"*frame10.shadowStyle: lowered",
+	"*frame10.shadowType: lowered",
 	"*frame10.btn.label: yes",
 	"*frame10.shadowWidth: 1",
 	"*frame10.Margin: 4",
 	"*frame10.fromVert: framen",
-	"*frame11.shadowStyle: blank",
+	"*frame11.shadowType: blank",
 	"*frame11.btn.label: no",
 	"*frame11.shadowWidth: 1",
 	"*frame11.Margin: 4",
@@ -122,6 +118,7 @@ XtActionsRec	fd_actions[] = {
     {"WMProtocols", WMProtocols},
 } ;
 
+int
 main(int argc, char **argv)
 {
 	topLevel = XtAppInitialize(&app_ctx, "Framedemo", NULL,0,
@@ -159,6 +156,9 @@ FrameDemo()
 
 	mainFrame = XtVaCreateManagedWidget("mainframe", frameWidgetClass,
 		marginFrame, 0) ;
+	lbl = XtCreateManagedWidget("maintitle", labelWidgetClass, mainFrame,
+		NULL, 0) ;
+	XtVaSetValues(mainFrame, XtNtitle, lbl, 0) ;
 
 	form = XtVaCreateManagedWidget("form", formWidgetClass,
 		mainFrame, 0) ;
@@ -234,11 +234,11 @@ static	void
 CommandCB(Widget cmd, XtPointer client, XtPointer data)
 {
 	if( cmd == yesBut ) {
-	  XtVaSetValues(yesFrame, XtNshadowStyle, Lowered, 0) ;
-	  XtVaSetValues(noFrame, XtNshadowStyle, Blank, 0) ;
+	  XtVaSetValues(yesFrame, XtNshadowType, Lowered, 0) ;
+	  XtVaSetValues(noFrame, XtNshadowType, Blank, 0) ;
 	}
 	else {
-	  XtVaSetValues(yesFrame, XtNshadowStyle, Blank, 0) ;
-	  XtVaSetValues(noFrame, XtNshadowStyle, Lowered, 0) ;
+	  XtVaSetValues(yesFrame, XtNshadowType, Blank, 0) ;
+	  XtVaSetValues(noFrame, XtNshadowType, Lowered, 0) ;
 	}
 }
