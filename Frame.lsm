@@ -1,0 +1,19 @@
+
+Begin3
+Title:		Frame - Decorative frame for any Xt widget.
+Version:	1.0
+Entered-date:	$Date$
+Description:	Adds a decorative frame around any other widget.  Styles
+		are solid, raised, lowered, ridge, groove, plateau, trough
+		and blank.
+		An optional label may be placed at the top.
+		Shadow width and interior margin may also be specified.
+Keywords:	X11 Xt Intrinsics frame shadow widget
+Author:		Edward A. Falk <falk@falconer.vip.best.com>
+Maintained-by:	Edward A. Falk <falk@falconer.vip.best.com>
+Primary-site:	
+Alternate-site: 
+Original-site:	
+Platforms:	Linux, Unix.
+Copying-policy: GPL
+End
