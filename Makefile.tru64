@@ -1,0 +1,23 @@
+# $Id$
+#
+# Makefile for Tru64 UNIX (aka DIGITAL UNIX).
+# Contributed by "Detlef Schmier" <detlef@rto.dec.com>
+
+CC = cc
+
+CFLAGS = -O2 -std1 -DLONG_BIT=64 -DNO_MESSAGE_CATALOG
+
+LIBS = -L/usr/lib -lXaw -lXmu -lXt -lSM -lICE -lXext -lX11
+
+SRCS = framedemo.c Frame.c Gcs.c
+OBJS = framedemo.o Frame.o Gcs.o
+
+all: framedemo
+
+framedemo: $(OBJS)
+	$(CC) -s -o $@ $(OBJS) $(LIBS)
+
+clean:
+	rm -f framedemo
+	rm -f *.CKP *.BAK *.bak *.bck *.o core errs tags TAGS
+
