@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id: Frame.c,v 1.3 1998/12/16 03:10:59 falk Exp falk $" ;
+static	char	rcsid[] = "$Id: Frame.c,v 1.4 1999/03/06 16:37:34 falk Exp falk $" ;
 
 /* Frame.c - Put a decorative frame around any other widget.
  *
@@ -9,6 +9,9 @@ static	char	rcsid[] = "$Id: Frame.c,v 1.3 1998/12/16 03:10:59 falk Exp falk $" ;
  *
  *
  * $Log: Frame.c,v $
+ * Revision 1.4  1999/03/06 16:37:34  falk
+ * Rewrite of geometry management
+ *
  * Revision 1.3  1998/12/16 03:10:59  falk
  * fixed shadow_etched_out, shadow_etched_in
  *
@@ -27,12 +30,10 @@ static	char	rcsid[] = "$Id: Frame.c,v 1.3 1998/12/16 03:10:59 falk Exp falk $" ;
 
 #include	<stdio.h>
 
-#include	<X11/Xlib.h>
 #include	<X11/IntrinsicP.h>
 #include	<X11/StringDefs.h>
 #include	<X11/Xmu/Converters.h>
 #include	<X11/Xmu/CharSet.h>
-#include	<X11/Xaw/Label.h>
 
 
 #include	"FrameP.h"
@@ -165,10 +166,12 @@ static	GC	XtAllocateGC() ;
 *
 ****************************************************************/
 
+#define	SuperClass	((CompositeWidgetClass)&compositeClassRec)
+
 FrameClassRec frameClassRec = {
   {
 /* core_class fields      */
-    /* superclass         */    (WidgetClass) &compositeClassRec,
+    /* superclass         */    (WidgetClass) SuperClass,
     /* class_name         */    "Frame",
     /* widget_size        */    sizeof(FrameRec),
     /* class_initialize   */    FrameClassInit,
@@ -305,9 +308,7 @@ FrameRealize(w, valueMask, attributes)
 {
 	FrameWidget fw = (FrameWidget) w;
 
-	/* TODO: shouldn't this chain to the parent's realize instead? */
-	XtCreateWindow( w, (unsigned)InputOutput, (Visual *)CopyFromParent,
-			*valueMask, attributes);
+	SuperClass->core_class.realize(w, valueMask, attributes) ;
 
 	FrameAllocGCs(fw) ;
 }
@@ -453,6 +454,7 @@ FrameSetValues(current, request, new, args, num_args)
 
 	if( fw->frame.title != curfw->frame.title ||
 	    fw->frame.shadowWidth != curfw->frame.shadowWidth  ||
+	    fw->frame.justify != curfw->frame.justify  ||
 	    fw->frame.marginWidth != curfw->frame.marginWidth ||
 	    fw->frame.marginHeight != curfw->frame.marginHeight )
 	{
@@ -468,15 +470,15 @@ FrameSetValues(current, request, new, args, num_args)
 	    fw->frame.be_nice_to_cmap != curfw->frame.be_nice_to_cmap  ||
 	    fw->frame.top_shadow_contrast != curfw->frame.top_shadow_contrast ||
 	    fw->frame.bot_shadow_contrast != curfw->frame.bot_shadow_contrast )
-	{
-	  FrameFreeGCs(fw) ;
-	  FrameAllocGCs(fw) ;
-	  needRedraw = True ;
-	}
+	  if( XtIsRealized(new) )
+	  {
+	    FrameFreeGCs(fw) ;
+	    FrameAllocGCs(fw) ;
+	    needRedraw = True ;
+	  }
 
-	else if( fw->core.sensitive != curfw->core.sensitive  ||
-		 fw->frame.type != curfw->frame.type  ||
-		 fw->frame.justify != curfw->frame.justify )
+	if( fw->frame.type != curfw->frame.type  ||
+	    fw->core.sensitive != curfw->core.sensitive )
 	  needRedraw = True ;
 
 	return needRedraw ;
