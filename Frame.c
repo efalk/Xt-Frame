@@ -1,4 +1,4 @@
-static	char	rcsid[] = "$Id: Frame.c,v 1.2 1998/12/15 06:35:16 falk Exp falk $" ;
+static	char	rcsid[] = "$Id: Frame.c,v 1.3 1998/12/16 03:10:59 falk Exp falk $" ;
 
 /* Frame.c - Put a decorative frame around any other widget.
  *
@@ -9,6 +9,9 @@ static	char	rcsid[] = "$Id: Frame.c,v 1.2 1998/12/15 06:35:16 falk Exp falk $" ;
  *
  *
  * $Log: Frame.c,v $
+ * Revision 1.3  1998/12/16 03:10:59  falk
+ * fixed shadow_etched_out, shadow_etched_in
+ *
  * Revision 1.2  1998/12/15 06:35:16  falk
  * label is now another child widget.  Some names
  * changed for compatibility with Motif.
@@ -492,9 +495,63 @@ FrameQueryGeometry(w, intended, preferred)
 	XtWidgetGeometry *intended, *preferred;
 {
 register FrameWidget fw = (FrameWidget)w ;
+	Dimension	cw,ch ;		/* child width, height */
+	Dimension	tw,th ;		/* title width, height */
+	XtWidgetGeometry c_intended, c_preferred ;
+	Widget		child = FrameChild(fw) ;
+	Widget		ttl = fw->frame.title ;
+	Dimension	sw = fw->frame.shadowWidth ;
+	Dimension	mw = fw->frame.marginWidth ;
+	Dimension	mh = fw->frame.marginHeight ;
+
+
+	/* Take intended size; subtract shadow width, margin, child border
+	 * size and forward the offer to the child.  Take child response,
+	 * add border size, margin, shadow width and return that result
+	 * to parent.
+	 *
+	 * Somewhat more complicated if there's a title widget.
+	 */
+
+	/* First, get title size.  */
+
+	if( ttl != NULL && XtIsManaged(ttl) ) {
+	  XtQueryGeometry(ttl, NULL, &c_preferred) ;
+	  tw = c_preferred.width + 2*c_preferred.border_width + 
+	  	2*max(mw, TTL_MARGIN) ;
+	  th = c_preferred.height + 2*c_preferred.border_width ;
+	}
+	else
+	  tw = th = 0 ;
+
+	/* title height will be used in place of top shadow width */
+	th = max(sw,th) ;
+
+	if( child != NULL && XtIsManaged(child) ) {
+	  if( intended != NULL ) {
+	    c_intended = *intended ;
+	    c_intended.request_mode &= CWWidth | CWHeight ;
+	    c_intended.width -= 2*sw + 2*mw + 2*child->core.border_width ;
+	    c_intended.width = max(c_intended.width,1) ;
+	    c_intended.height -= th+sw + 2*mh + 2*child->core.border_width ;
+	    c_intended.height = max(c_intended.height,1) ;
+	  }
+	  else
+	    c_intended.request_mode = 0 ;
+
+	  XtQueryGeometry(child, &c_intended, &c_preferred) ;
+	  cw = c_preferred.width + 2*c_preferred.border_width + 2*sw + 2*mw ;
+	  ch = c_preferred.height + 2*c_preferred.border_width ;
+	}
+	else
+	  cw = ch = MIN_SIZE ;
 
 	preferred->request_mode = CWWidth | CWHeight ;
-	PreferredSize(fw, &preferred->width, &preferred->height) ;
+	preferred->width = max(cw,tw) ;
+	preferred->height = th+sw + 2*mh + ch ;
+
+	if( intended == NULL )
+	  return XtGeometryYes ;
 
 	if( intended->width == w->core.width  &&
 	    intended->height == w->core.height )
@@ -552,22 +609,25 @@ FrameGeometryManager(w, req, reply)
 
 	if (req->request_mode & (CWWidth | CWHeight | CWBorderWidth))
 	{
+	  XtWidgetGeometry	myrequest, myreply ;
 	  Dimension	cw,ch ;		/* child size, including borders */
 	  Dimension	tw,th ;		/* title size, including borders */
 	  Dimension	wid,hgt ;	/* Frame widget size */
-	  Dimension	margin = fw->frame.shadowWidth + req->border_width ;
 	  Dimension	oldWid = fw->core.width, oldHgt = fw->core.height ;
-	  XtWidgetGeometry	myrequest, myreply ;
 	  Widget	child = FrameChild(fw) ;
 	  Widget	ttl = fw->frame.title ;
+	  Dimension	sw = fw->frame.shadowWidth ;
+	  Dimension	mw = fw->frame.marginWidth ;
+	  Dimension	mh = fw->frame.marginHeight ;
+	  Dimension	margin = sw + req->border_width ;
 
 	  if( w == child ) {
 	    cw = req->width + req->border_width*2 ;
 	    ch = req->height + req->border_width*2 ;
 	  }
 	  else if( child != NULL ) {
-	    cw = child->core.width ;
-	    ch = child->core.height ;
+	    cw = child->core.width + child->core.border_width*2 ;
+	    ch = child->core.height + child->core.border_width*2 ;
 	  }
 	  else
 	    cw = ch = 0 ;
@@ -577,8 +637,8 @@ FrameGeometryManager(w, req, reply)
 	    th = req->height + req->border_width*2 ;
 	  }
 	  else if( ttl != NULL ) {
-	    tw = ttl->core.width ;
-	    th = ttl->core.height ;
+	    tw = ttl->core.width + ttl->core.border_width*2 ;
+	    th = ttl->core.height + ttl->core.border_width*2 ;
 	  }
 	  else
 	    tw = th = 0 ;
@@ -591,7 +651,6 @@ FrameGeometryManager(w, req, reply)
 	  myrequest.height = hgt ;
 	  myrequest.request_mode = CWWidth | CWHeight ;
 
-	  /* If child is only querying then make this a query only.  */
 	  myrequest.request_mode |= req->request_mode & XtCWQueryOnly ;
 
 	  result = XtMakeGeometryRequest((Widget)fw, &myrequest, &myreply) ;
@@ -609,9 +668,9 @@ FrameGeometryManager(w, req, reply)
 
 	  /* If parent offers a compromise, we do the same. */
 	  if( result == XtGeometryAlmost ) {
-	    reply->width = myreply.width - (margin+fw->frame.marginWidth)*2 ;
-	    reply->width = min(reply->width, req->width) ;
-	    reply->height= myreply.height- (margin+fw->frame.marginHeight)*2;
+	    reply->width  = myreply.width - (margin + mw) * 2 ;
+	    reply->width  = min(reply->width, req->width) ;
+	    reply->height = myreply.height- (margin+mh)*2;
 	    reply->height = min(reply->height, req->height) ;
 	    reply->border_width = req->border_width ;
 	    if( reply->width < 1 || reply->height < 1 )
@@ -711,29 +770,11 @@ PreferredSize(fw, reply_width, reply_height)
 	FrameWidget	fw;
 	Dimension	*reply_width, *reply_height;	/* total widget size */
 {
-	Dimension	cw,ch ;		/* child width, height */
-	Dimension	tw,th ;		/* title width, height */
 	XtWidgetGeometry preferred ;
-	Widget		child = FrameChild(fw) ;
-	Widget		ttl = fw->frame.title ;
 
-	if( child != NULL ) {
-	  XtQueryGeometry(child, NULL, &preferred) ;
-	  cw = preferred.width + 2*preferred.border_width ;
-	  ch = preferred.height + 2*preferred.border_width ;
-	}
-	else
-	  cw = ch = MIN_SIZE ;
-
-	if( ttl != NULL ) {
-	  XtQueryGeometry(ttl, NULL, &preferred) ;
-	  tw = preferred.width + 2*preferred.border_width ;
-	  th = preferred.height + 2*preferred.border_width ;
-	}
-	else
-	  tw = th = 0 ;
-
-	PreferredSize3(fw, cw,ch, tw,th, reply_width, reply_height) ;
+	(void) FrameQueryGeometry((Widget)fw, NULL, &preferred) ;
+	*reply_width = preferred.width ;
+	*reply_height = preferred.height ;
 }
 
 
