@@ -1,8 +1,9 @@
-/* $Id$
+/* $Id: Frame.h,v 1.1 1998/10/12 01:33:20 falk Exp falk $
  *
  * This widget manages one child widget, placing a decorative border
- * around it.  The frame may have an optional label, which will be placed
- * at the top, breaking the decoration.
+ * around it.  The frame may have an optional title, which will be placed
+ * at the top, breaking the decoration.  The title may be any widget, but
+ * is normally some sort of label widget.
  *
  * Border styles are as follow:
  *
@@ -32,24 +33,22 @@
 
  Name		     Class		RepType		Default Value
  ----		     -----		-------		-------------
- shadowStyle	     ShadowStyle	ShadowStyle	solid
+ shadowType	     ShadowType		ShadowType	solid
  shadowWidth	     ShadowWidth	Dimension
  foreground	     Foreground		Pixel		XtDefaultForeground
- label		     Label		String		NULL
- font		     Font		XFontStruct*	XtDefaultFont
+ title		     Title		Widget		NULL
  justify	     Justify		XtJustify	left
- internalWidth	     Margin		Dimension	0
- internalHeight	     Margin		Dimension	0
+ marginWidth	     Margin		Dimension	0
+ marginHeight	     Margin		Dimension	0
  allowResize	     AllowResize	Boolean		True
 
  beNiceToColormap    BeNiceToColormap	Boolean		False
  topShadowContrast   TopShadowContrast	int		20
  bottomShadowContrast BottomShadowContrast int		40
- insensitiveContrast InsensitiveContrast int		33
 
  background	     Background		Pixel		XtDefaultBackground
  border		     BorderColor	Pixel		XtDefaultForeground
- borderWidth	     BorderWidth	Dimension	1
+ borderWidth	     BorderWidth	Dimension	0
 
  destroyCallback     Callback		Pointer		NULL
  mappedWhenManaged   MappedWhenManaged	Boolean		True
@@ -63,23 +62,32 @@
  1 internalWidth, internalHeight specify the margins around the child widget
  2 allowResize specifies if child widget is allowed to resize itself.
  3 BeNiceToColormap causes the Frame widget to use fewer colors.
- 4 InsensitiveContrast sets the contrast used for labels when insensitive
 
 */
 
 /* New fields */
 
-#ifndef	XtNshadowStyle
-#define XtNshadowStyle "shadowStyle"
-#define XtCShadowStyle "ShadowStyle"
-#define XtRShadowStyle "ShadowStyle"
+#ifndef	XtNtitle
+#define XtNtitle "title"
+#define XtCTitle "Title"
 #endif
 
-#ifndef	XtCAllowResize
+#ifndef	XtNshadowType
+#define XtNshadowType "shadowType"
+#define XtCShadowType "ShadowType"
+#define XtRShadowType "ShadowType"
+#endif
+
 #ifndef	XtNallowResize
 #define XtNallowResize "allowResize"
 #endif
+#ifndef	XtCAllowResize
 #define XtCAllowResize "AllowResize"
+#endif
+
+#ifndef	XtNmarginWidth
+#define	XtNmarginWidth	"marginWidth"
+#define	XtNmarginHeight	"marginHeight"
 #endif
 
 #ifndef	XtNshadowWidth
@@ -122,7 +130,7 @@ typedef	enum {	Blank,		/* no border */
 		Groove,		/* indented groove */
 		Plateau,	/* raised ridge with flat top */
 		Trough}		/* indented groove with flat bottom */
-	      XtShadowStyle ;
+	      XtShadowType ;
 
 
 /* Class record constants */
