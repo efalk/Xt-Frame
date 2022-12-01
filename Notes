@@ -1,0 +1,113 @@
+TODO: more sophisticated labels.  Bitmaps too?  Leverage off of Label widget?
+
+one-child widget which places a decorative border around other
+widgets.
+
+Styles:
+
+  blank
+  raised	raised shadow
+  sunken	sunken shadow
+  ridge		raised around sunken
+  groove	sunken around raised
+  trough	groove with trough.
+  plateau	ridge with flat top
+
+
+Label:		border is broken by a text label
+Alignment:	left/center/right alignment of label
+
+Default style:
+  file system tool looks like:
+  	###############
+	#.............
+	#.............
+	#.............
+	#.............
+	#.............
+	#.............
+	#......
+	#......
+	#......
+	#......
+	#......
+	#......
+
+  kde is the same, but 4-pixel trough instead of 6
+
+
+Labeled Frame:
+  KMix preferences:
+
+		     X
+	########     X		groove border, 5-pixel margin around text
+	#.......     X
+	#.	     X
+	#.	     X
+	#.
+	#.
+
+
+
+
+
+
+Layout issues:
+
+  overview:
+    main frame, paned widget, box widget, buttons
+
+    create main frame; w=h=0
+    create paned panel
+      w=500, h=0	(taken from defaults)
+      CallInitialize(Paned, widget)
+	CallInitialize(Constraint, widget)
+	  CallInitialize(Composite, widget)
+	    CallInitialize(Core, widget)
+	      CallInitialize(UnNamedObj, widget)
+		CallInitialize(Rect, widget)
+		  CallInitialize(Object, widget)
+	      CoreInitialize
+	    CompositeInitialize
+	PanedInitialize
+      XtManageChild
+
+    create toolbar box widget
+      width=0, height=40	(taken from defaults)
+      CallInitialize(Box, toolbar)
+	CoreInitialize
+	CompositeInitialize
+	Box Initialize
+	  last_query_mode = w|h
+	  last_wid=last_hgt=0
+	  preferred w,h = 4,4
+	  width=4, height=40
+      PanedInsertChild
+	CreateGrip
+      XtManageChild
+
+    create buttons, no sizes change.
+
+    XtRealizeWidget(topLevel)
+      CallChangeManaged(topLevel)
+	CallChangeManaged(mainPanel)
+	  CallChangeManaged(grip)
+	  CallChangeManaged(toolbar)
+	    CallChangeManaged(stop)
+	    :
+	    BoxChangeManaged(box)
+	      TryNewLayout
+		DoLayout, preferred w,h = 41,129
+		XtMakeResizeRequest(41,129)
+		  _XtMakeGeometryRequest
+		    parent not realized, so automatically grant
+	      Resize
+		DoLayout (again!), ignore return values.
+	  PanedChangeManaged(mainPanel)
+	    size = 500 (paned core width)
+	    SetChildrenPrefSizes(mainPanel, 500)
+	      XtQueryGeometry(box, CWWidth.500
+		BoxPreferredSize
+		  DoLayout(500,0) returns 154,29
+		  return XtGeometryAlmost:154,29
+	    XtGeometryRequest(500,29)
