@@ -9,9 +9,9 @@ Description:	Adds a decorative frame around any other widget.  Styles
 		An optional label may be placed at the top.
 		Shadow width and interior margin may also be specified.
 Keywords:	X11 Xt Intrinsics frame shadow widget
-Author:		Edward A. Falk <falk@falconer.vip.best.com>
-Maintained-by:	Edward A. Falk <falk@falconer.vip.best.com>
-Primary-site:	
+Author:		Edward A. Falk <falk@efalk.org>
+Maintained-by:	Edward A. Falk <falk@efalk.org>
+Primary-site:	www.efalk.org/Widgets/
 Alternate-site: 
 Original-site:	
 Platforms:	Linux, Unix.

@@ -3,7 +3,7 @@ static	char	rcsid[] = "$Id: Frame.c,v 1.5 1999/08/26 17:49:03 falk Exp falk $" ;
 /* Frame.c - Put a decorative frame around any other widget.
  *
  * Author: Edward A. Falk
- *	   falk@falconer.vip.best.com
+ *	   falk@efalk.org
  *
  * Date: Sept 29, 1998
  *

@@ -25,4 +25,4 @@ HOW TO BUILD?
 
 X11 Xt Intrinsics frame shadow widget
 
-Author:		Edward A. Falk <falk@falconer.vip.best.com>
+Author:		Edward A. Falk <falk@efalk.org>

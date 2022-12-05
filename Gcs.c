@@ -4,7 +4,7 @@ static	char	rcsid[] = "$Id: Gcs.c,v 1.7 1999/09/08 17:44:12 falk Exp $" ;
  * Gcs.c - Utility functions to allocate GCs.
  *
  * Author: Edward A. Falk
- *	   falk@falconer.vip.best.com
+ *	   falk@efalk.org
  *
  * Date: Sept 29, 1998
  *
